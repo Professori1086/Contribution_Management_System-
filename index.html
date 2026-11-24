@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>St Paul Church Siaya - Contributions</title>
+<style>
+body{font-family:Arial;background:#f4f4f2;margin:0;padding:16px}
+header{background:#1a3a2e;color:#fff;padding:16px;border-radius:12px;display:flex;justify-content:space-between}
+.card{background:#fff;padding:16px;border-radius:12px;margin-top:12px;box-shadow:0 1px 4px #0001}
+input,select,button{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:8px;box-sizing:border-box}
+button{background:#1a8c5a;color:#fff;border:0;font-weight:bold;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><b>St. Paul Church Siaya• Contributions</b><span>Admin</span></header>
+
+<div class="grid">
+<div class="card">
+<h3>+ Record Contribution</h3>
+<input id="memberName" placeholder="Member Name - e.g. Mercy Adhiambo"src="">
+<input id="phone" placeholder="Phone - e.g. 0712...">
+<select id="type"><option>Monthly upkeep</option><option>Welfare</option><option>Bishop's visit</option><option>Funeral contribution</option><option>Fr. end of year contribution</option><option>Church construction</option></select>
+<input id="amount" type="number" placeholder="Amount (KES)">
+<select id="method"><option>M-Pesa</option><option>Cash</option><option>Bank</option></select>
+<input id="date" type="date">
+<button onclick="save()">Save Contribution</button>
+</div>
+
+<div class="card">
+<h3>Dashboard</h3>
+<p><b>This Month:</b> <span id="totalMonth">KES 0</span></p>
+<p><b>Total Records:</b> <span id="count">0</span></p>
+<input id="search" placeholder="Search member..." oninput="render()">
+<button onclick="exportCSV()" style="background:#333">Export to Excel (CSV)</button>
+<button onclick="clearAll()" style="background:#fff;color:#c00;border:1px solid #fcc">Clear Demo Data</button>
+</div>
+</div>
+
+<div class="card">
+<h3>Recent Contributions</h3>
+<table><thead><tr><th>Date</th><th>Member</th><th>Type</th><th>Method</th><th>Amount</th></tr></thead>
+<tbody id="rows"></tbody></table>
+</div>
+
+<script>
+let data = [];
+ saveLocal();
+}
+function saveLocal(){ localStorage.setItem('church', JSON.stringify(data)); }
+function save(){
+ let n=document.getElementById('memberName').value;
+ let a=Number(document.getElementById('amount').value);
+ if(!n||!a) return alert('Enter name and amount');
+ data.unshift({date:document.getElementById('date').value||new Date().toISOString().slice(0,10),name:n,phone:document.getElementById('phone').value,type:document.getElementById('type').value,method:document.getElementById('method').value,amount:a});
+ saveLocal(); render(); alert('Saved!');
+ document.getElementById('memberName').value=''; document.getElementById('amount').value='';
+}
+function render(){
+ let q=(document.getElementById('search').value||'').toLowerCase();
+ let filtered=data.filter(d=>d.name.toLowerCase().includes(q)||d.phone.includes(q));
+ document.getElementById('rows').innerHTML=filtered.map(d=>`<tr><td>${d.date}</td><td>${d.name}<br><small>${d.phone}</small></td><td>${d.type}</td><td>${d.method}</td><td>KES ${d.amount.toLocaleString()}</td></tr>`).join('');
+ let month=new Date().toISOString().slice(0,7);
+ let tot=data.filter(d=>d.date.startsWith(month)).reduce((s,d)=>s+d.amount,0);
+ document.getElementById('totalMonth').textContent='KES '+tot.toLocaleString();
+ document.getElementById('count').textContent=data.length;
+}
+function exportCSV(){
+ let csv='Date,Member,Phone,Type,Method,Amount\n'+data.map(d=>`${d.date},${d.name},${d.phone},${d.type},${d.method},${d.amount}`).join('\n');
+ let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='church-contributions.csv'; a.click();
+}
+function clearAll(){ if(confirm('Clear all?')){data=[];saveLocal();render();} }
+document.getElementById('date').value=new Date().toISOString().slice(0,10);
+render();
+</script>
+</body>
+</html>
